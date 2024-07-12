@@ -29,12 +29,12 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="explore"
+          name="profile"
           options={{
-            title: "Explore",
+            title: "Profile",
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="search" size={size} color={color} />
+              <Ionicons name="person" size={size} color={color} />
             ),
           }}
         />

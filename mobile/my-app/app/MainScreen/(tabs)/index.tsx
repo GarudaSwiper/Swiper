@@ -11,13 +11,17 @@ import {
   ScrollView,
   ImageBackground,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import {
   CameraView,
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
+import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import planner from "../../../constants/planner.js";
 
@@ -33,8 +37,12 @@ export default function HomeTab() {
   const [isRecording, setIsRecording] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [video, setVideo] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSwipeable, setShowSwipeable] = useState(false);
   const cameraRef = useRef(null);
   const [plannerItems, setPlannerItems] = useState(planner);
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const swipeableRefs = useRef(planner.map(() => React.createRef()));
 
   const requestPermissions = async () => {
@@ -62,16 +70,18 @@ export default function HomeTab() {
     if (cameraRef.current) {
       setIsRecording(true);
       const options = {
-        quality: "1080p",
         maxDuration: 60, // Set maximum duration to 60 seconds
-        mute: false,
       };
       const video = await cameraRef.current
         ?.recordAsync(options)
         .then(async (data) => {
+          console.log("HALO");
           console.log("Video recorded:", data.uri);
           setVideo(data);
           return data;
+        })
+        .catch((error) => {
+          console.log(error);
         });
     }
   };
@@ -80,6 +90,13 @@ export default function HomeTab() {
     if (cameraRef.current) {
       cameraRef.current?.stopRecording();
       setIsRecording(false);
+      setIsFullScreen(false);
+
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        setShowSwipeable(true);
+      }, 10000); // 10 seconds delay
       return;
     }
   };
@@ -152,9 +169,42 @@ export default function HomeTab() {
     setPlannerItems(newPlannerItems);
   };
 
+  const LoadingScreen = () => (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Analyzing your response...</Text>
+      <ActivityIndicator size="large" color="#FFB069" />
+    </View>
+  );
+
+  const onChangeDate = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(false);
+    setDate(currentDate);
+  };
+
+  const bookAppointment = () => {
+    Alert.alert("Appointment Booked", "Your place has been reserved!", [
+      { text: "OK" },
+    ]);
+  };
+
   return (
     <ImageBackground source={bgSwiper} style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Swiper</Text>
+          <TouchableOpacity>
+            <Ionicons name="person-circle-outline" size={32} color="#333" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.streakContainer}>
+          <Text style={styles.streakText}>🔥 7 Day Streak!</Text>
+          <View style={styles.progressBar}>
+            <View style={[styles.progress, { width: "70%" }]} />
+          </View>
+        </View>
+
         <View
           style={[
             styles.cameraContainer,
@@ -176,6 +226,7 @@ export default function HomeTab() {
             ]}
           />
         </View>
+
         <TouchableOpacity
           style={[styles.button, isFullScreen && styles.fullScreenButton]}
           onPress={toggleRecording}
@@ -184,14 +235,16 @@ export default function HomeTab() {
             {isRecording ? "Stop Recording" : "Start Recording"}
           </Text>
         </TouchableOpacity>
-        {!isFullScreen && (
-          <>
-            {video && (
-              <Text style={styles.videoInfo}>
-                Recorded video file: {video.uri}
-              </Text>
-            )}
-            <ScrollView style={styles.scrollView}>
+
+        {isLoading ? (
+          <LoadingScreen />
+        ) : (
+          !isFullScreen &&
+          showSwipeable && (
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollViewContent}
+            >
               {plannerItems.map((item, index) => (
                 <Swipeable
                   key={item.id}
@@ -199,14 +252,12 @@ export default function HomeTab() {
                   renderRightActions={renderRightActions}
                   renderLeftActions={renderLeftActions}
                   onSwipeableRightOpen={() => {
-                    console.log(`Completed: ${item.day}`);
                     toggleStatus(index, "completed");
                     setTimeout(() => {
                       swipeableRefs.current[index].current?.close();
                     }, 1);
                   }}
                   onSwipeableLeftOpen={() => {
-                    console.log(`Todo: ${item.day}`);
                     toggleStatus(index, "todo");
                     setTimeout(() => {
                       swipeableRefs.current[index].current?.close();
@@ -222,21 +273,61 @@ export default function HomeTab() {
                   >
                     <Text style={styles.dayText}>{item.day}</Text>
                     {item.task.map((task, taskIndex) => (
-                      <Text key={taskIndex} style={styles.taskText}>
-                        {task.taskTitle} ({task.duration} min)
-                      </Text>
+                      <View key={taskIndex} style={styles.taskContainer}>
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={24}
+                          color="#666"
+                        />
+                        <View style={styles.taskTextContainer}>
+                          <Text style={styles.taskTitle}>{task.taskTitle}</Text>
+                          <Text style={styles.taskDuration}>
+                            {task.duration} min
+                          </Text>
+                        </View>
+                      </View>
                     ))}
                   </View>
                 </Swipeable>
               ))}
+              <View style={styles.appointmentContainer}>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.datePickerButtonText}>
+                    {date.toLocaleString()}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    testID="dateTimePicker"
+                    value={date}
+                    mode="datetime"
+                    is24Hour={true}
+                    display="default"
+                    onChange={onChangeDate}
+                  />
+                )}
+                <TouchableOpacity
+                  style={styles.appointmentButton}
+                  onPress={bookAppointment}
+                >
+                  <Text style={styles.appointmentButtonText}>
+                    Appointment with Live Expert
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
-          </>
+          )
         )}
+
         {isFullScreen && (
           <View style={styles.fullScreenGreetingContainer}>
             <Text style={styles.greetingText}>
               <Text style={styles.emoji}>🦊: </Text>
-              How do you feel after a tiring weekend?
+              If your daily routine were a playlist, what kind of songs would be
+              on it?
             </Text>
           </View>
         )}
@@ -388,5 +479,103 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     padding: 10,
     borderRadius: 10,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  streakContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    width: "90%",
+  },
+  streakText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  progressBar: {
+    height: 10,
+    backgroundColor: "#ddd",
+    borderRadius: 5,
+  },
+  progress: {
+    height: "100%",
+    backgroundColor: "#4CAF50",
+    borderRadius: 5,
+  },
+  taskContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  taskTextContainer: {
+    marginLeft: 10,
+  },
+  taskTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  taskDuration: {
+    fontSize: 12,
+    color: "#666",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333",
+  },
+  appointmentContainer: {
+    width: "100%",
+    marginTop: 20,
+    alignItems: "center",
+  },
+  datePickerButton: {
+    backgroundColor: "#FFB069",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  datePickerButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  appointmentButton: {
+    backgroundColor: "#4CAF50",
+    padding: 15,
+    marginTop: 5,
+    borderRadius: 5,
+  },
+  appointmentButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  scrollViewContent: {
+    paddingBottom: 50,
   },
 });
