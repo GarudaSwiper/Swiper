@@ -11,7 +11,7 @@ import time
 def resize_frame(frame, width, height):
     return cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
 
-def extract_frame(video_path, video_name, fps=30, skip=5):
+def extract_frame(video_path, video_name, fps=30, skip=10):
     interval = fps * skip
     frame_no = 0
     video = cv2.VideoCapture(video_path)

@@ -17,3 +17,4 @@ if __name__ == "__main__":
     print('Extracting emotion from video...')
     emotions = extract_emotion(video_name)
     print('Extracting body movement from video...')
+    print(emotions)
