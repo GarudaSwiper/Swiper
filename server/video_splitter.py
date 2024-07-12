@@ -63,11 +63,3 @@ def extract_all(video_path, video_name, audio_name, transcript_name):
     extract_audio(video_path, audio_name)
     extract_transcript(audio_name, transcript_name)
     print(f'Elapsed Time: {time.time()-begin}')
-    
-if __name__ == '__main__':
-    video_path = 'ai/videos/_Kevin Surace- 1 Minute Ted Talk.mp4'
-    video_name = 'ai/results/frame.mp4'
-    audio_name = 'ai/results/audio.wav'
-    transcript_name = 'ai/results/transcript.txt'
-    
-    extract_all(video_path, video_name, audio_name, transcript_name)

@@ -1,6 +1,5 @@
 .env
-ai/AudioWAV/*
-ai/videos/*
-ai/vectorstore/*
-ai/__pycache__/*
-ai/tempCodeRunnerFile.py
+server/videos/*
+server/vectorstore/*
+server/__pycache__/*
+server/tempCodeRunnerFile.py

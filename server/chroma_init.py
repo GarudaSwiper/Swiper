@@ -14,7 +14,7 @@ documents = []
 def initialize_knowledge():
     text_splitter = CharacterTextSplitter(separator='\n', chunk_size=100, chunk_overlap=50)
     
-    with open('ai/const/bipolar.txt') as f:
+    with open('server/const/bipolar.txt') as f:
         bipolar = f.read()
         bipolar = text_splitter.create_documents([bipolar])
         for i in range(len(bipolar)):
@@ -23,7 +23,7 @@ def initialize_knowledge():
             }
         documents = documents + bipolar
 
-    with open('ai/const/depression.txt') as f:
+    with open('server/const/depression.txt') as f:
         depression = f.read()
         depression = text_splitter.create_documents([depression])
         for i in range(len(depression)):
@@ -32,7 +32,7 @@ def initialize_knowledge():
             }
         documents = documents + depression
 
-    with open('ai/const/anxiety.txt') as f:
+    with open('server/const/anxiety.txt') as f:
         anxiety = f.read()
         anxiety = text_splitter.create_documents([anxiety])
         for i in range(len(anxiety)):
@@ -41,7 +41,7 @@ def initialize_knowledge():
             }
         documents = documents + anxiety
 
-    with open('ai/const/ptsd.txt') as f:
+    with open('server/const/ptsd.txt') as f:
         ptsd = f.read()
         ptsd = text_splitter.create_documents([ptsd])
         for i in range(len(ptsd)):
@@ -50,7 +50,7 @@ def initialize_knowledge():
             }
         documents = documents + ptsd
 
-    vectorstore = Chroma.from_documents(documents, embeddings, persist_directory='ai/vectorstore', collection_name='mental_health_disorders')
+    vectorstore = Chroma.from_documents(documents, embeddings, persist_directory='server/vectorstore', collection_name='mental_health_disorders')
     return vectorstore
 
 def initialize_story():
@@ -62,7 +62,7 @@ def initialize_story():
         story.metadata = {
             'id': stories.index(story) + 1,
         }
-    vectorstore = Chroma.from_documents(stories, embeddings, persist_directory='ai/vectorstore', collection_name='stories')
+    vectorstore = Chroma.from_documents(stories, embeddings, persist_directory='server/vectorstore', collection_name='stories')
     
     return vectorstore
 

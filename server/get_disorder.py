@@ -5,7 +5,7 @@ from typing import List
 
 load_dotenv()
 
-def get_prompt(transcript: str, emotions: List):
+def get_prompt(transcript: str, emotions: List, tone: str):
     prompt = f'''
     Imagine that you are a mental health professional. You just did an interview with a patient who is experiencing symptoms of mental heath disoders.
 
@@ -18,6 +18,8 @@ def get_prompt(transcript: str, emotions: List):
     Here are the patient's responses: {transcript}
 
     Throughout the interview, you noticed that the sequence of the patient's emotion is: {str(emotions)}
+    
+    You also noticed that the patient's tone of voice is: {tone}
 
     Based on these datas, Summarize the patient's mental health state by including the key symptomps and abnormal behavior during the interview if any in at most 50 words.
     
@@ -30,12 +32,6 @@ def get_mental_health_disorder(prompt: str):
     model = ChatOpenAI(temperature=0.2)
     answer = model.invoke(prompt).content
     embeddings = OpenAIEmbeddings()
-    db = Chroma(persist_directory='ai/vectorstore', embedding_function=embeddings, collection_name='mental_health_disorders')
+    db = Chroma(persist_directory='server/vectorstore', embedding_function=embeddings, collection_name='mental_health_disorders')
     answer = db.similarity_search(answer)
     return answer[0].metadata['title']
-
-if __name__ == "__main__":
-    transcript = "I feel really good today. I am proud of myself for finishing this project. I feel disconnected from my friends. I need some time alone."
-    emotions = ['happy', 'happy', 'sad', 'sad']
-    prompt = get_prompt(transcript, emotions)
-    print(get_mental_health_disorder(prompt))

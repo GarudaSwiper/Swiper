@@ -4,7 +4,7 @@ from fer import FER
 
 def extract_emotion(video_path):
     begin = time.time()
-    video_path = 'ai/results/frame.mp4'
+    video_path = 'server/results/frame.mp4'
     cap = cv2.VideoCapture(video_path)
     detector = FER()
     emotions = []
