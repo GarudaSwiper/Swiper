@@ -1,4 +1,5 @@
 from video_splitter import extract_all
+from emotion import extract_emotion
 
 if __name__ == "__main__":
     # Extract the video's frames, audio, and transcript
@@ -11,5 +12,8 @@ if __name__ == "__main__":
     audio_name = 'ai/results/audio.wav'
     transcript_name = 'ai/results/transcript.txt'
     
-    # extract_all(video_path, video_name, audio_name, transcript_name)
-    
+    print('Extracting video frames, audio, and transcript...')
+    extract_all(video_path, video_name, audio_name, transcript_name)
+    print('Extracting emotion from video...')
+    emotions = extract_emotion(video_name)
+    print('Extracting body movement from video...')

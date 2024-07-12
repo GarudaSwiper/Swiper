@@ -11,19 +11,24 @@ import time
 def resize_frame(frame, width, height):
     return cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
 
-def extract_frame(video_path, video_name):
+def extract_frame(video_path, video_name, fps=30, skip=5):
+    interval = fps * skip
+    frame_no = 0
     video = cv2.VideoCapture(video_path)
-    out_video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), 30, (1280, 720))
+    out_video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), fps, (1280, 720))
     
     while True:
         ret, frame = video.read()
         if not ret:
             break
-        frame = resize_frame(frame, 1280, 720)
-        out_video.write(frame)
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if frame_no % interval == 0:
+            frame = resize_frame(frame, 1280, 720)
+            out_video.write(frame)
+            
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        frame_no += 1
     
     video.release()
     out_video.release()
